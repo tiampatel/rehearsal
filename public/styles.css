@@ -1,0 +1,215 @@
+/*
+ * CampusFix styles. Class names / data attributes available to public/app.js:
+ *   Layout:   .layout .panel .side .tickets .detail .field .field-row .button .button--secondary
+ *   Summary:  .summary .summary-card (+ --open --in_progress --resolved) .summary-label .summary-value
+ *   List:     ul#ticket-list > li.ticket-item[data-id] ; add .is-selected (and aria-current="true") on the active one
+ *             inside li: button.ticket-button (full-row click target), .ticket-title, .ticket-meta, .ticket-assignee
+ *   Badges:   .badge plus .badge--priority-{low|medium|high}, .badge--status-{open|in_progress|resolved},
+ *             .badge--category
+ *   States:   #list-state.list-state (aria-live); add .is-error for errors; set the hidden attribute or empty text to clear.
+ *             .form-error elements (#create-error, #detail-error, #comment-error) are shown by removing [hidden].
+ *   Comments: ul#comment-list > li.comment-item > .comment-meta (time) + .comment-body (text)
+ *   Misc:     .visually-hidden, .is-busy (opacity while loading), [hidden] always hides.
+ */
+
+:root {
+  --bg: #f4f6f9;
+  --surface: #ffffff;
+  --text: #1c2430;
+  --muted: #5b6676;
+  --border: #d3dae3;
+  --accent: #1b5fd1;
+  --accent-text: #ffffff;
+  --danger: #b3261e;
+  --danger-bg: #fdecea;
+  --focus: #e08a00;
+  --radius: 8px;
+  --p-low-bg: #e3f1e6; --p-low-fg: #1e5a2b;
+  --p-medium-bg: #fff1d1; --p-medium-fg: #7a4d00;
+  --p-high-bg: #fbdcd9; --p-high-fg: #8c1d16;
+  --s-open-bg: #dde8fb; --s-open-fg: #164594;
+  --s-progress-bg: #efe2fa; --s-progress-fg: #55218a;
+  --s-resolved-bg: #dff1ea; --s-resolved-fg: #17573f;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg: #12161c;
+    --surface: #1a2029;
+    --text: #e6ebf2;
+    --muted: #9aa6b6;
+    --border: #2f3a48;
+    --accent: #6ea2ff;
+    --accent-text: #0b1220;
+    --danger: #ff8a80;
+    --danger-bg: #3a1c1a;
+    --focus: #ffb84d;
+    --p-low-bg: #1c3524; --p-low-fg: #9fe0b0;
+    --p-medium-bg: #3b3017; --p-medium-fg: #f5cf7a;
+    --p-high-bg: #43211f; --p-high-fg: #ffb0a8;
+    --s-open-bg: #1c2b4a; --s-open-fg: #a9c6ff;
+    --s-progress-bg: #2f2141; --s-progress-fg: #d8b8f5;
+    --s-resolved-bg: #1b3a30; --s-resolved-fg: #9fe3c8;
+  }
+}
+
+*, *::before, *::after { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--text);
+  font-family: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  line-height: 1.45;
+}
+
+[hidden] { display: none !important; }
+
+h1, h2, h3 { margin: 0 0 0.5rem; line-height: 1.2; }
+h1 { font-size: 1.6rem; }
+h2 { font-size: 1.15rem; }
+h3 { font-size: 1rem; margin-top: 1rem; }
+
+.visually-hidden {
+  position: absolute; width: 1px; height: 1px; margin: -1px; padding: 0;
+  overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; border: 0;
+}
+
+.skip-link {
+  position: absolute; left: 0.5rem; top: -3rem; z-index: 10;
+  background: var(--accent); color: var(--accent-text);
+  padding: 0.5rem 0.75rem; border-radius: var(--radius);
+}
+.skip-link:focus { top: 0.5rem; }
+
+:focus-visible {
+  outline: 3px solid var(--focus);
+  outline-offset: 2px;
+}
+
+.site-header {
+  display: flex; flex-wrap: wrap; align-items: baseline; gap: 0.75rem;
+  padding: 1rem 1.25rem; background: var(--surface); border-bottom: 1px solid var(--border);
+}
+.site-header h1 { margin: 0; }
+.tagline { margin: 0; color: var(--muted); }
+
+.layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1.6fr) minmax(0, 1fr);
+  grid-template-areas: "summary summary" "tickets side";
+  gap: 1rem;
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 1rem;
+}
+.summary { grid-area: summary; }
+.tickets { grid-area: tickets; }
+.side { grid-area: side; display: flex; flex-direction: column; gap: 1rem; min-width: 0; }
+
+.panel {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 1rem;
+  min-width: 0;
+}
+
+/* Summary cards */
+.summary { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 0.75rem; }
+.summary-card {
+  background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius);
+  padding: 0.75rem 1rem; border-top-width: 4px; display: flex; flex-direction: column;
+}
+.summary-card--open { border-top-color: var(--s-open-fg); }
+.summary-card--in_progress { border-top-color: var(--s-progress-fg); }
+.summary-card--resolved { border-top-color: var(--s-resolved-fg); }
+.summary-label { color: var(--muted); font-size: 0.85rem; }
+.summary-value { font-size: 1.8rem; font-weight: 700; font-variant-numeric: tabular-nums; }
+
+/* Forms */
+.field { display: flex; flex-direction: column; gap: 0.25rem; margin-bottom: 0.75rem; min-width: 0; }
+.field--grow { flex: 1 1 14rem; }
+.field--action { justify-content: flex-end; }
+.field-row { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0.75rem; }
+label { font-size: 0.85rem; font-weight: 600; }
+
+input, select, textarea {
+  font: inherit; color: var(--text); background: var(--bg);
+  border: 1px solid var(--border); border-radius: 6px; padding: 0.45rem 0.6rem; width: 100%;
+}
+textarea { resize: vertical; }
+
+.button {
+  font: inherit; font-weight: 600; cursor: pointer;
+  background: var(--accent); color: var(--accent-text);
+  border: 1px solid var(--accent); border-radius: 6px; padding: 0.5rem 1rem;
+}
+.button:hover { filter: brightness(1.08); }
+.button--secondary { background: transparent; color: var(--accent); }
+.button:disabled { opacity: 0.55; cursor: not-allowed; }
+
+.filters { display: flex; flex-wrap: wrap; gap: 0.75rem; align-items: flex-end; }
+.filters .field { margin-bottom: 0; }
+
+.form-error {
+  margin: 0 0 0.75rem; padding: 0.5rem 0.75rem; border-radius: 6px;
+  color: var(--danger); background: var(--danger-bg); border: 1px solid var(--danger);
+}
+
+/* List */
+.list-meta { margin: 0.75rem 0 0.25rem; color: var(--muted); font-size: 0.9rem; }
+.list-state { margin: 0.5rem 0; color: var(--muted); }
+.list-state:empty { display: none; }
+.list-state.is-error { color: var(--danger); font-weight: 600; }
+
+.ticket-list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 0.5rem; }
+.ticket-item { border: 1px solid var(--border); border-radius: var(--radius); background: var(--bg); }
+.ticket-item.is-selected { border-color: var(--accent); box-shadow: 0 0 0 2px var(--accent) inset; }
+.ticket-button {
+  display: block; width: 100%; text-align: left; font: inherit; color: inherit;
+  background: none; border: 0; padding: 0.65rem 0.8rem; cursor: pointer; border-radius: var(--radius);
+}
+.ticket-button:hover { background: color-mix(in srgb, var(--accent) 8%, transparent); }
+.ticket-title { display: block; font-weight: 600; margin-bottom: 0.3rem; overflow-wrap: anywhere; }
+.ticket-meta { display: flex; flex-wrap: wrap; gap: 0.4rem; align-items: center; color: var(--muted); font-size: 0.85rem; }
+
+/* Badges */
+.badge {
+  display: inline-block; padding: 0.1rem 0.5rem; border-radius: 999px;
+  font-size: 0.75rem; font-weight: 600; white-space: nowrap;
+  background: var(--border); color: var(--text);
+}
+.badge--priority-low { background: var(--p-low-bg); color: var(--p-low-fg); }
+.badge--priority-medium { background: var(--p-medium-bg); color: var(--p-medium-fg); }
+.badge--priority-high { background: var(--p-high-bg); color: var(--p-high-fg); }
+.badge--status-open { background: var(--s-open-bg); color: var(--s-open-fg); }
+.badge--status-in_progress { background: var(--s-progress-bg); color: var(--s-progress-fg); }
+.badge--status-resolved { background: var(--s-resolved-bg); color: var(--s-resolved-fg); }
+.badge--category { background: transparent; border: 1px solid var(--border); color: var(--muted); }
+
+/* Detail */
+.detail-description { white-space: pre-wrap; overflow-wrap: anywhere; }
+.comment-list { list-style: none; margin: 0 0 1rem; padding: 0; display: flex; flex-direction: column; gap: 0.5rem; }
+.comment-list:empty::before { content: "No comments yet."; color: var(--muted); }
+.comment-item { border-left: 3px solid var(--border); padding: 0.25rem 0.75rem; }
+.comment-meta { color: var(--muted); font-size: 0.8rem; }
+.comment-body { white-space: pre-wrap; overflow-wrap: anywhere; }
+
+.is-busy { opacity: 0.6; }
+
+.site-footer { text-align: center; color: var(--muted); font-size: 0.85rem; padding: 1rem; }
+
+@media (max-width: 900px) {
+  .layout { grid-template-columns: minmax(0, 1fr); grid-template-areas: "summary" "tickets" "side"; }
+  .summary { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+
+@media (max-width: 480px) {
+  .field-row { grid-template-columns: minmax(0, 1fr); }
+  .filters .field { flex: 1 1 100%; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  * { transition: none !important; animation: none !important; }
+}

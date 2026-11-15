@@ -1,0 +1,166 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="light dark">
+  <title>CampusFix Helpdesk</title>
+  <link rel="stylesheet" href="/styles.css">
+  <script type="module" src="/app.js"></script>
+</head>
+<body>
+  <a class="skip-link" href="#ticket-list">Skip to ticket list</a>
+
+  <header class="site-header">
+    <h1>CampusFix</h1>
+    <p class="tagline">Campus maintenance helpdesk</p>
+  </header>
+
+  <main class="layout">
+    <section class="summary" aria-labelledby="summary-heading">
+      <h2 id="summary-heading" class="visually-hidden">Ticket summary</h2>
+      <div class="summary-card">
+        <span class="summary-label">Total</span>
+        <span class="summary-value" id="summary-total">0</span>
+      </div>
+      <div class="summary-card summary-card--open">
+        <span class="summary-label">Open</span>
+        <span class="summary-value" id="summary-open">0</span>
+      </div>
+      <div class="summary-card summary-card--in_progress">
+        <span class="summary-label">In progress</span>
+        <span class="summary-value" id="summary-in-progress">0</span>
+      </div>
+      <div class="summary-card summary-card--resolved">
+        <span class="summary-label">Resolved</span>
+        <span class="summary-value" id="summary-resolved">0</span>
+      </div>
+    </section>
+
+    <section class="panel tickets" aria-labelledby="tickets-heading">
+      <h2 id="tickets-heading">Tickets</h2>
+
+      <form class="filters" role="search" aria-label="Filter tickets" onsubmit="return false">
+        <div class="field field--grow">
+          <label for="search-input">Search</label>
+          <input type="search" id="search-input" name="q" placeholder="Title or description" maxlength="200" autocomplete="off">
+        </div>
+        <div class="field">
+          <label for="filter-status">Status</label>
+          <select id="filter-status" name="status">
+            <option value="">All statuses</option>
+            <option value="open">Open</option>
+            <option value="in_progress">In progress</option>
+            <option value="resolved">Resolved</option>
+          </select>
+        </div>
+        <div class="field">
+          <label for="filter-priority">Priority</label>
+          <select id="filter-priority" name="priority">
+            <option value="">All priorities</option>
+            <option value="low">Low</option>
+            <option value="medium">Medium</option>
+            <option value="high">High</option>
+          </select>
+        </div>
+        <div class="field">
+          <label for="filter-category">Category</label>
+          <select id="filter-category" name="category">
+            <option value="">All categories</option>
+            <option value="network">Network</option>
+            <option value="equipment">Equipment</option>
+            <option value="facilities">Facilities</option>
+          </select>
+        </div>
+        <div class="field field--action">
+          <button type="button" id="clear-filters" class="button button--secondary">Clear filters</button>
+        </div>
+      </form>
+
+      <p class="list-meta"><span id="ticket-count">0 tickets</span></p>
+      <p id="list-state" class="list-state" role="status" aria-live="polite">Loading tickets...</p>
+      <ul id="ticket-list" class="ticket-list" aria-label="Tickets"></ul>
+    </section>
+
+    <aside class="side">
+      <section class="panel" aria-labelledby="create-heading">
+        <h2 id="create-heading">New ticket</h2>
+        <form id="create-form" novalidate>
+          <div class="field">
+            <label for="create-title">Title</label>
+            <input type="text" id="create-title" name="title" maxlength="120" required>
+          </div>
+          <div class="field">
+            <label for="create-description">Description</label>
+            <textarea id="create-description" name="description" rows="3" maxlength="2000" required></textarea>
+          </div>
+          <div class="field-row">
+            <div class="field">
+              <label for="create-category">Category</label>
+              <select id="create-category" name="category">
+                <option value="network">Network</option>
+                <option value="equipment">Equipment</option>
+                <option value="facilities">Facilities</option>
+              </select>
+            </div>
+            <div class="field">
+              <label for="create-priority">Priority</label>
+              <select id="create-priority" name="priority">
+                <option value="low">Low</option>
+                <option value="medium" selected>Medium</option>
+                <option value="high">High</option>
+              </select>
+            </div>
+          </div>
+          <p id="create-error" class="form-error" role="alert" hidden></p>
+          <button type="submit" class="button">Create ticket</button>
+        </form>
+      </section>
+
+      <section id="detail-panel" class="panel detail" aria-labelledby="detail-title" tabindex="-1">
+        <h2 id="detail-title">Select a ticket</h2>
+        <p id="detail-description" class="detail-description">Choose a ticket from the list to see its details and comments.</p>
+
+        <div class="field-row">
+          <div class="field">
+            <label for="detail-status">Status</label>
+            <select id="detail-status" name="status">
+              <option value="open">Open</option>
+              <option value="in_progress">In progress</option>
+              <option value="resolved">Resolved</option>
+            </select>
+          </div>
+          <div class="field">
+            <label for="detail-assignee">Assignee</label>
+            <select id="detail-assignee" name="assignedTo">
+              <option value="">Unassigned</option>
+              <option value="Avery Chen">Avery Chen</option>
+              <option value="Jordan Okafor">Jordan Okafor</option>
+              <option value="Priya Raman">Priya Raman</option>
+              <option value="Mateo Alvarez">Mateo Alvarez</option>
+              <option value="Sam Whitlock">Sam Whitlock</option>
+            </select>
+          </div>
+        </div>
+        <p id="detail-error" class="form-error" role="alert" hidden></p>
+
+        <h3>Comments</h3>
+        <ul id="comment-list" class="comment-list" aria-label="Comments"></ul>
+
+        <form id="comment-form" novalidate>
+          <div class="field">
+            <label for="comment-body">Add a comment</label>
+            <textarea id="comment-body" name="body" rows="3" maxlength="1000" required></textarea>
+          </div>
+          <p id="comment-error" class="form-error" role="alert" hidden></p>
+          <button type="submit" class="button">Add comment</button>
+        </form>
+      </section>
+    </aside>
+  </main>
+
+  <footer class="site-footer">
+    <p>CampusFix demo. Fictional data only.</p>
+  </footer>
+</body>
+</html>
