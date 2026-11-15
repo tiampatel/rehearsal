@@ -1,0 +1,13 @@
+# Catalyst runtime and generated project handover stay out of this demo repository.
+.catalyst/
+IMPORTANT.md
+node_modules/
+data/
+coverage/
+*.log
+*.catalyst-backup
+.claude/settings.local.json
+.env
+.env.*
+.DS_Store
+.recordings/
