@@ -45,10 +45,16 @@ inventing success. Keep your lead turn active with wait_for_updates while waitin
    It writes test/acceptance.test.js against the real integrated app and a temporary database,
    exercises the required end-to-end HTTP behavior in BRIEF.md, and runs the actual full suite.
    It does not fake tests, use TODOs, suppress errors, change implementation files without ownership,
-   or complete a failing task. If it finds a defect, report it with evidence, coordinate an owner through
-   Tiam, fetch the fix safely, and rerun. It completes acceptance only with actual passing evidence.
+   or complete a failing task. If acceptance fails, the worker checkpoints the actual failure and returns
+   normally WITHOUT complete_task. As lead, commit only its failing acceptance test as explicitly labelled WIP
+   on namit/frontend, push that evidence and send ACCEPTANCE_BLOCKED with the commit and failing output.
+   Keep the worktree clean while Tiam fixes the implementation on a corrective branch. On FIX_READY, fetch and
+   fast-forward to the announced passing main, then start a replacement acceptance worker to reclaim and retest
+   the unfinished task. This keeps Git updates out of a dirty active worker checkout.
+   It completes acceptance only with actual passing evidence; WIP is not success.
 
-6. Once the acceptance worker has finished, commit/push the acceptance tests on namit/frontend.
+6. Once the acceptance worker has passed and finished, commit/push any remaining acceptance-test changes
+   on namit/frontend (if the fix loop already published them, report that existing commit without an empty commit).
    Send ACCEPTANCE_READY with the actual commit and full test output.
    Wait for FINAL_READY. If Tiam reports a real integration issue, coordinate a scoped fix; do not silently alter contracts.
 

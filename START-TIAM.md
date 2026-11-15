@@ -54,6 +54,10 @@ wait_for_updates and continue the workflow. This is a recorded functional rehear
    issues with explicit ownership/messages before moving on. Push main only after these checks pass.
    Send INTEGRATION_READY to Namit with the actual main commit and verification output.
    Keep responding to questions and wait for ACCEPTANCE_READY; do not stop your lead turn early.
+   If Namit sends ACCEPTANCE_BLOCKED, fetch the WIP test commit into a corrective branch (not a failing
+   published main). Use scoped owner-assigned fixes and preserve the acceptance assertions.
+   Once the full suite actually passes, merge/push main and send FIX_READY with its actual hash.
+   Namit will reclaim/retest acceptance; continue until it passes or a precise external blocker exists.
 
 7. Fetch and merge Namit's pushed acceptance commit after ACCEPTANCE_READY. Run the complete npm test suite.
    A failed acceptance test is a defect to fix, not permission to remove or weaken the assertion.
