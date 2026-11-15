@@ -42,10 +42,12 @@ value is a `400 validation_error` (see Errors) rather than an empty list. `q` is
 
 **Ordering (deterministic):** `updatedAt` descending, then `id` descending.
 
-**Search scope (`q`): PENDING DECISION** — Namit asks via Catalyst; the answer is published as a
-Catalyst decision and recorded here before search is implemented.
+**Search scope (`q`)** (Catalyst decision `contract/search-filters`): `q` is trimmed; when non-empty a ticket
+matches if the text is a case-insensitive substring of its `title` OR its `description`. LIKE wildcards
+(`%`, `_`, `\`) in `q` are literal. A multi-word `q` is one substring, not tokenised.
 
-**Filter combination: PENDING DECISION** — same process.
+**Filter combination** (same decision): `q`, `status`, `priority` and `category` are combined with **AND**.
+Absent/empty parameters impose no constraint. `status`/`priority`/`category` each take one exact value.
 
 ### POST /api/tickets
 Body: `{"title","description","category","priority"}` (all required).
@@ -107,7 +109,7 @@ creates tables if missing and returns a synchronous object:
 |---|---|
 | `createTicket(input, extra?)` | Ticket. `input` = validated create value. `extra` may set `status`, `assignedTo`, `createdAt`, `updatedAt` (used by seeding; defaults: `open`, `null`, now) |
 | `getTicket(id)` | Ticket or `null` |
-| `listTickets(filters = {})` | `Ticket[]` ordered as above; `filters` = `{q,status,priority,category}` per the pending search decision |
+| `listTickets(filters = {})` | `Ticket[]` ordered as above; `filters` = `{q,status,priority,category}` per the search/filter decision above (title OR description, AND-combined) |
 | `updateTicket(id, patch)` | updated Ticket or `null` if the id does not exist; `patch` = validated patch value |
 | `addComment(ticketId, {body})` | Comment, or `null` if the ticket does not exist; refreshes ticket `updatedAt` |
 | `listComments(ticketId)` | `Comment[]` ordered as above (empty array for unknown id) |
