@@ -29,6 +29,7 @@ test('every route and error code the brief requires is defined', () => {
   assert.equal(contract.ROUTES.ticket, '/api/tickets/:id');
   assert.equal(contract.ROUTES.comments, '/api/tickets/:id/comments');
   assert.equal(contract.ROUTES.summary, '/api/summary');
+  assert.equal(contract.ROUTES.exportTicketsCsv, '/api/export/tickets.csv');
   assert.equal(contract.ERROR_CODES.validation, 'validation_error');
   assert.equal(contract.ERROR_CODES.notFound, 'not_found');
 });

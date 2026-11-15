@@ -451,6 +451,82 @@ describe('API over HTTP', () => {
     });
   });
 
+  describe('GET /api/export/tickets.csv', () => {
+    let fixtures;
+    let fx;
+
+    before(async () => {
+      fixtures = createApp({ dbPath: join(dir, 'csv.db'), publicDir });
+      const { url } = await fixtures.start(0);
+      fx = makeClient(url);
+      const make = async (body, patch) => {
+        const { ticket } = (await fx.post('/api/tickets', body)).json;
+        if (patch) await fx.patch(`/api/tickets/${ticket.id}`, patch);
+        await sleep(3);
+        return ticket.id;
+      };
+      fixtures.ids = {
+        a: await make({ title: 'Projector, "broken"', description: 'No picture.', category: 'equipment', priority: 'medium' }),
+        b: await make({ title: 'Wi-Fi drops', description: 'The projector room loses Wi-Fi.', category: 'network', priority: 'high' }, { assignedTo: 'Avery Chen' }),
+        c: await make({ title: 'Roof leak', description: 'Water in corridor', category: 'facilities', priority: 'high' }, { status: 'resolved' }),
+      };
+    });
+
+    after(async () => {
+      await fixtures.stop();
+    });
+
+    const HEADER = 'id,title,category,priority,status,assignedTo\r\n';
+
+    test('returns CSV with the contract headers, columns, escaping and CRLF', async () => {
+      const { a, b, c } = fixtures.ids;
+      const res = await fx.get('/api/export/tickets.csv');
+      assert.equal(res.status, 200);
+      assert.equal(res.headers.get('content-type'), 'text/csv; charset=utf-8');
+      assert.equal(res.headers.get('content-disposition'), 'attachment; filename="campusfix-tickets.csv"');
+      assert.equal(
+        res.text,
+        HEADER +
+          `${c},Roof leak,facilities,high,resolved,\r\n` +
+          `${b},Wi-Fi drops,network,high,open,Avery Chen\r\n` +
+          `${a},"Projector, ""broken""",equipment,medium,open,\r\n`,
+      );
+    });
+
+    test('applies the same AND-combined filters as GET /api/tickets (q matches title or description)', async () => {
+      const { a, b, c } = fixtures.ids;
+      const rows = async (query) =>
+        (await fx.get(`/api/export/tickets.csv${query}`)).text.split('\r\n').slice(1, -1).map((r) => Number(r.split(',')[0]));
+      assert.deepEqual(await rows('?q=projector'), [b, a]);
+      assert.deepEqual(await rows('?q=projector&priority=high'), [b]);
+      assert.deepEqual(await rows('?status=resolved&category=facilities'), [c]);
+      const list = (await fx.get('/api/tickets?q=projector&priority=high')).json.tickets.map((t) => t.id);
+      assert.deepEqual(await rows('?q=projector&priority=high'), list);
+    });
+
+    test('no match yields just the header row', async () => {
+      const res = await fx.get('/api/export/tickets.csv?q=zzzzzz-nothing');
+      assert.equal(res.status, 200);
+      assert.equal(res.text, HEADER);
+    });
+
+    test('invalid filters are 400 validation_error JSON', async () => {
+      const res = await fx.get('/api/export/tickets.csv?status=bogus');
+      assert.equal(res.status, 400);
+      assert.equal(res.json.error.code, 'validation_error');
+      assert.ok(res.json.error.fields.status);
+    });
+
+    test('non-GET methods are 405 with Allow: GET', async () => {
+      for (const method of ['POST', 'PUT', 'PATCH', 'DELETE']) {
+        const res = await fx.call(method, '/api/export/tickets.csv');
+        assert.equal(res.status, 405, method);
+        assert.equal(res.json.error.code, 'method_not_allowed', method);
+        assert.equal(res.headers.get('allow'), 'GET', method);
+      }
+    });
+  });
+
   describe('GET /api/summary', () => {
     test('returns the four counts', async () => {
       const res = await api.get('/api/summary');

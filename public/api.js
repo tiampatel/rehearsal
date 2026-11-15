@@ -26,6 +26,11 @@ export function buildQuery(filters = {}) {
   return qs ? `?${qs}` : '';
 }
 
+// URL of the CSV export for the given filters (same filter keys as the ticket list).
+export function exportCsvUrl(filters = {}, baseUrl = '') {
+  return `${baseUrl}/api/export/tickets.csv${buildQuery(filters)}`;
+}
+
 export function createClient({ baseUrl = '', fetchImpl = globalThis.fetch } = {}) {
   async function request(method, path, body) {
     const init = { method, headers: { Accept: 'application/json' } };
@@ -111,5 +116,6 @@ export function createClient({ baseUrl = '', fetchImpl = globalThis.fetch } = {}
     updateTicket: (id, patch) => request('PATCH', ticketPath(id), patch),
     addComment: (id, body) => request('POST', `${ticketPath(id)}/comments`, { body }),
     getSummary: () => request('GET', '/api/summary'),
+    exportCsvUrl: (filters) => exportCsvUrl(filters, baseUrl),
   };
 }

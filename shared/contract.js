@@ -65,6 +65,7 @@ export const ROUTES = Object.freeze({
   ticket: '/api/tickets/:id',
   comments: '/api/tickets/:id/comments',
   summary: '/api/summary',
+  exportTicketsCsv: '/api/export/tickets.csv',
 });
 
 export const ERROR_CODES = Object.freeze({
@@ -89,6 +90,7 @@ export const DOM_IDS = Object.freeze({
   filterPriority: 'filter-priority',
   filterCategory: 'filter-category',
   clearFilters: 'clear-filters',
+  exportTickets: 'export-tickets', // <a download> to the CSV export for the current filters
   // list
   ticketList: 'ticket-list',
   ticketCount: 'ticket-count',

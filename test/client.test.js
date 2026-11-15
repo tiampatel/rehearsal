@@ -127,3 +127,10 @@ test('network failure rejects with status 0 network_error', async () => {
     return true;
   });
 });
+
+test('exportCsvUrl builds the CSV export URL from the active filters', async () => {
+  const { exportCsvUrl, createClient } = await import('../public/api.js');
+  assert.equal(exportCsvUrl({}), '/api/export/tickets.csv');
+  assert.equal(exportCsvUrl({ q: ' lab ', status: 'open', priority: '' }), '/api/export/tickets.csv?q=lab&status=open');
+  assert.equal(createClient({ baseUrl: 'http://x' }).exportCsvUrl({ category: 'network' }), 'http://x/api/export/tickets.csv?category=network');
+});

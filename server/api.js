@@ -9,9 +9,12 @@ import {
   validateListQuery,
   validatePatchTicket,
 } from './validation.js';
+import { ticketsToCsv } from './csv.js';
 
 const MAX_BODY_BYTES = 64 * 1024;
 const JSON_TYPE = 'application/json; charset=utf-8';
+const CSV_TYPE = 'text/csv; charset=utf-8';
+const CSV_DISPOSITION = 'attachment; filename="campusfix-tickets.csv"';
 
 class HttpError extends Error {
   constructor(status, code, message, fields, headers) {
@@ -33,6 +36,17 @@ export function sendJson(res, status, payload, headers = {}) {
     'Content-Length': body.length,
     'Cache-Control': 'no-store',
     ...headers,
+  });
+  res.end(body);
+}
+
+export function sendCsv(res, csv) {
+  const body = Buffer.from(csv, 'utf8');
+  res.writeHead(200, {
+    'Content-Type': CSV_TYPE,
+    'Content-Disposition': CSV_DISPOSITION,
+    'Content-Length': body.length,
+    'Cache-Control': 'no-store',
   });
   res.end(body);
 }
@@ -122,6 +136,13 @@ export function createApiHandler(store) {
       return { status: 200, payload: store.getSummary() };
     }
 
+    if (pathname === ROUTES.exportTicketsCsv) {
+      if (method !== 'GET') throw methodNotAllowed(['GET']);
+      const query = validateListQuery(url.searchParams);
+      if (!query.ok) throw validationError(query.fields);
+      return { status: 200, csv: ticketsToCsv(store.listTickets(query.value)) };
+    }
+
     if (pathname === ROUTES.tickets) {
       if (method === 'GET') {
         const query = validateListQuery(url.searchParams);
@@ -189,8 +210,9 @@ export function createApiHandler(store) {
     }
 
     try {
-      const { status, payload } = await route(req, url);
-      sendJson(res, status, payload);
+      const { status, payload, csv } = await route(req, url);
+      if (csv !== undefined) sendCsv(res, csv);
+      else sendJson(res, status, payload);
     } catch (error) {
       if (error instanceof HttpError) {
         sendError(res, error.status, error.code, error.message, error.fields, error.headers);

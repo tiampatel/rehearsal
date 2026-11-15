@@ -49,6 +49,19 @@ matches if the text is a case-insensitive substring of its `title` OR its `descr
 **Filter combination** (same decision): `q`, `status`, `priority` and `category` are combined with **AND**.
 Absent/empty parameters impose no constraint. `status`/`priority`/`category` each take one exact value.
 
+### GET /api/export/tickets.csv
+Downloads the tickets as CSV (Catalyst decision `feature/csv-export`). Accepts the same optional `q`, `status`,
+`priority`, `category` parameters as `GET /api/tickets`, with identical semantics (AND-combined, `q` matches title OR
+description), identical ordering (`updatedAt` descending, then `id` descending) and the same `400 validation_error`
+for an unsupported filter value. Non-GET methods are `405 method_not_allowed` with `Allow: GET`.
+
+`200` with `Content-Type: text/csv; charset=utf-8` and `Content-Disposition: attachment; filename="campusfix-tickets.csv"`.
+Columns, in order: `id,title,category,priority,status,assignedTo`. The header row is always present (even for zero
+tickets); an unassigned ticket has an empty `assignedTo`. RFC 4180 escaping: fields containing a comma, double quote,
+CR or LF are quoted and embedded quotes are doubled. Lines end with CRLF, including the last record.
+The serializer is `ticketsToCsv` in `server/csv.js`. The page's "Export CSV" link (`#export-tickets`) points at this
+route with the currently active filters.
+
 ### POST /api/tickets
 Body: `{"title","description","category","priority"}` (all required).
 `201 {"ticket":Ticket}` with `status:"open"`, `assignedTo:null`, `createdAt == updatedAt`.

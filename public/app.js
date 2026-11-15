@@ -1,7 +1,7 @@
 // CampusFix page wiring. Search/filter semantics are applied by the server; this module only
 // forwards the non-empty control values (see public/view-model.js filtersToQuery).
 import { DOM_IDS, EVENTS } from '/shared/contract.js';
-import { createClient } from '/api.js';
+import { createClient, exportCsvUrl } from '/api.js';
 import {
   filtersToQuery, hasActiveFilters, summaryCards, ticketCountText, ticketRow, listState,
   detailView, assigneeToPatch, errorMessage,
@@ -130,6 +130,7 @@ async function refreshSummary() {
 async function refreshList() {
   const seq = ++state.listSeq;
   const filters = readFilters();
+  syncExportLink();
   renderListState({ loading: true });
   try {
     const { tickets } = await client.listTickets(filters);
@@ -252,6 +253,10 @@ function onSearchInput() {
   searchTimer = setTimeout(refreshList, SEARCH_DEBOUNCE_MS);
 }
 
+function syncExportLink() {
+  $('exportTickets').setAttribute('href', exportCsvUrl(readFilters()));
+}
+
 function onFilterChange() {
   clearTimeout(searchTimer);
   refreshList();
@@ -276,6 +281,8 @@ function init() {
     $(key).addEventListener('change', onFilterChange);
   }
   $('clearFilters').addEventListener('click', onClear);
+  // Refresh just before the browser follows the link so a pending (debounced) search is included.
+  $('exportTickets').addEventListener('click', syncExportLink);
   $('createForm').addEventListener('submit', onCreate);
   $('commentForm').addEventListener('submit', onComment);
   $('detailStatus').addEventListener('change', (e) => patchSelected({ status: e.target.value }, e.target));
