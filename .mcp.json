@@ -1,0 +1,10 @@
+{
+  "mcpServers": {
+    "catalyst": {
+      "command": "catalyst",
+      "args": [
+        "mcp"
+      ]
+    }
+  }
+}
